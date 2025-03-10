@@ -3,7 +3,6 @@ import torch
 from typing import List, Tuple
 from einops import rearrange
 
-import triton.testing
 
 from trifast.triton import (
     _fwd,
