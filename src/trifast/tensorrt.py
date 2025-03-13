@@ -48,16 +48,13 @@ trifast_op_table = {
 }
 
 def symbolic_triangle_attention(g, q, k, v, b, mask):
-    out_type = q.type()
-    out2_shape = list(out_type.sizes())
-    out2_type = out_type.with_sizes(tuple(out2_shape[:2]+out2_shape[3:]))
     out = g.op(
         "trifast::triangle_attention",
         q, k, v, b, mask,
         outputs = 2
     )
-    out[0].setType(out_type)
-    out[1].setType(out2_type)
+    out[0].setType(q.type())
+    out[1].setType(v.type())
     return out[0], out[1]
 
 
@@ -131,11 +128,7 @@ class TriangleAttentionPlugin(trt.IPluginV2DynamicExt):
         return input_types[0]
 
     def get_output_dimensions(self, output_index, inputs, exprBuilder):
-        if output_index == 0:
-            output_dims = trt.DimsExprs(inputs[0])
-        else:
-            expr_list = list(trt.DimsExprs(inputs[0]))
-            output_dims = trt.DimsExprs(expr_list[:2]+expr_list[3:])
+        output_dims = trt.DimsExprs(inputs[0 if output_index == 0 else 3])
         return output_dims
 
     def serialize(self):
@@ -203,7 +196,6 @@ class TriangleAttentionPlugin(trt.IPluginV2DynamicExt):
                 .view(dtype=trt_to_torch[output_desc[1].type])
             .view(tuple(output_desc[1].dims))
             )
-
             o, l = torch.ops.trifast.triangle_attention(
                 i_t[0],
                 i_t[1],

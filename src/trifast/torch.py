@@ -65,6 +65,7 @@ def _(
     
     o = rearrange(o, "(b h) ... -> b h ...", h=h, b=bs).contiguous()
     l = rearrange(l, "(b h) ... -> b h ...", h=h, b=bs).contiguous()
+
     return o, l
 
 
